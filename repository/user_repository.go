@@ -59,6 +59,5 @@ func (r *UserRepository) GetUserByEmail(email string) (model.User, error) {
 	if err == nil {
 		return existingUser, nil
 	}
-	panic(err)
 	return model.User{}, ErrUserNotFound
 }
