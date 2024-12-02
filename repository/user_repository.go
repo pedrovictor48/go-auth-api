@@ -39,20 +39,26 @@ func (r *UserRepository) CreateUser(user model.User) error {
 	}
 
 	user.Password = string(hash)
-	_, err = collection.InsertOne(context.TODO(), user)
+	_, err = collection.InsertOne(context.TODO(), bson.M{
+		"email":     user.Email,
+		"password":  user.Password,
+		"name":      user.Name,
+		"birthdate": user.Birthdate,
+	})
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (r *UserRepository) GetUserByEmail(user model.User) (model.User, error) {
+func (r *UserRepository) GetUserByEmail(email string) (model.User, error) {
 	var err error
-	collection := r.client.Database("testb").Collection("users")
+	collection := r.client.Database("testdb").Collection("users")
 	var existingUser model.User
-	err = collection.FindOne(context.TODO(), bson.M{"email": user.Email}).Decode(&existingUser)
+	err = collection.FindOne(context.TODO(), bson.M{"email": email}).Decode(&existingUser)
 	if err == nil {
 		return existingUser, nil
 	}
+	panic(err)
 	return model.User{}, ErrUserNotFound
 }
