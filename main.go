@@ -2,6 +2,7 @@ package main
 
 import (
 	"auth_api/controller"
+	"auth_api/db"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,10 +10,12 @@ import (
 
 func main() {
 	var err error
+	client := db.ConnectDB()
+	userController := controller.NewUserController(client)
 
 	http.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
 		if http.MethodPost == r.Method {
-			controller.Login(w, r)
+			userController.Login(w, r)
 		} else {
 			http.Error(w, "Método não permitido", http.StatusMethodNotAllowed)
 		}
@@ -21,7 +24,7 @@ func main() {
 
 	http.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
 		if http.MethodPost == r.Method {
-			controller.Register(w, r)
+			userController.Register(w, r)
 		} else {
 			http.Error(w, "Método não permitido", http.StatusMethodNotAllowed)
 		}

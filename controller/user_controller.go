@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"auth_api/db"
 	"auth_api/model"
 	"auth_api/repository"
 	"encoding/json"
@@ -10,17 +9,25 @@ import (
 	"os"
 
 	"github.com/dgrijalva/jwt-go"
+	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
 )
+
+type UserController struct {
+	client *mongo.Client
+}
+
+func NewUserController(client *mongo.Client) UserController {
+	return UserController{client}
+}
 
 type UserLogin struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
-func Login(w http.ResponseWriter, r *http.Request) {
+func (c *UserController) Login(w http.ResponseWriter, r *http.Request) {
 	secret := os.Getenv("JWT_SECRET")
-	client := db.ConnectDB()
 
 	var user UserLogin
 	decoder := json.NewDecoder(r.Body)
@@ -29,7 +36,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Erro ao ler JSON", http.StatusBadRequest)
 		return
 	}
-	userRepository := repository.NewUserRepository(client)
+	userRepository := repository.NewUserRepository(c.client)
 	existingUser, err := userRepository.GetUserByEmail(user.Email)
 	if err == repository.ErrUserNotFound {
 		http.Error(w, "Usuário não encontrado", http.StatusNotFound)
@@ -59,8 +66,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"token": tokenString})
 }
 
-func Register(w http.ResponseWriter, r *http.Request) {
-	client := db.ConnectDB()
+func (c *UserController) Register(w http.ResponseWriter, r *http.Request) {
 
 	var user model.User
 	decoder := json.NewDecoder(r.Body)
@@ -69,7 +75,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Erro ao ler JSON", http.StatusBadRequest)
 		return
 	}
-	userRepository := repository.NewUserRepository(client)
+	userRepository := repository.NewUserRepository(c.client)
 	err = userRepository.CreateUser(user)
 	if err == repository.ErrEmailAlreadyExists {
 		http.Error(w, "Email já cadastrado", http.StatusConflict)
