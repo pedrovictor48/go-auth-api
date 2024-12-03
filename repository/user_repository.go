@@ -23,7 +23,7 @@ func NewUserRepository(client *mongo.Client) UserRepository {
 	return UserRepository{client}
 }
 
-func (r *UserRepository) CreateUser(user model.User) error {
+func (r *UserRepository) CreateUser(user model.UserRegister) error {
 	var err error
 	collection := r.client.Database("testdb").Collection("users")
 	//
@@ -39,16 +39,8 @@ func (r *UserRepository) CreateUser(user model.User) error {
 	}
 
 	user.Password = string(hash)
-	_, err = collection.InsertOne(context.TODO(), bson.M{
-		"email":     user.Email,
-		"password":  user.Password,
-		"name":      user.Name,
-		"birthdate": user.Birthdate,
-	})
-	if err != nil {
-		return err
-	}
-	return nil
+	_, err = collection.InsertOne(context.TODO(), user)
+	return err
 }
 
 func (r *UserRepository) GetUserByEmail(email string) (model.User, error) {
