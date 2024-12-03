@@ -68,7 +68,7 @@ func (c *UserController) Login(w http.ResponseWriter, r *http.Request) {
 
 func (c *UserController) Register(w http.ResponseWriter, r *http.Request) {
 
-	var user model.User
+	var user model.UserRegister
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&user)
 	if err != nil {
