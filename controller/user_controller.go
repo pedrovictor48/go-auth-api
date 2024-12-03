@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"auth_api/model"
 	"auth_api/repository"
 	"auth_api/usecase"
 	"encoding/json"
@@ -17,7 +16,7 @@ func NewUserController(usecase usecase.UserUsecase) UserController {
 }
 
 func (c *UserController) Login(w http.ResponseWriter, r *http.Request) {
-	var user model.UserLogin
+	var user repository.UserLogin
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&user)
 	if err != nil {
@@ -42,7 +41,7 @@ func (c *UserController) Login(w http.ResponseWriter, r *http.Request) {
 
 func (c *UserController) Register(w http.ResponseWriter, r *http.Request) {
 
-	var user model.UserRegister
+	var user repository.UserRegister
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&user)
 	if err != nil {

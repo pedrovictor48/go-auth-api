@@ -1,7 +1,6 @@
 package usecase
 
 import (
-	"auth_api/model"
 	"auth_api/repository"
 	"errors"
 	"os"
@@ -25,7 +24,7 @@ func NewUserUsecase(repo repository.UserRepository) UserUsecase {
 	}
 }
 
-func (u *UserUsecase) LoginUser(user model.UserLogin) (string, error) {
+func (u *UserUsecase) LoginUser(user repository.UserLogin) (string, error) {
 	secret := os.Getenv("JWT_SECRET")
 	userRepository := u.repository
 	existingUser, err := userRepository.GetUserByEmail(user.Email)
@@ -49,7 +48,7 @@ func (u *UserUsecase) LoginUser(user model.UserLogin) (string, error) {
 	return tokenString, nil
 }
 
-func (u *UserUsecase) RegisterUser(user model.UserRegister) error {
+func (u *UserUsecase) RegisterUser(user repository.UserRegister) error {
 	var err error
 	userRepository := u.repository
 	err = userRepository.CreateUser(user)

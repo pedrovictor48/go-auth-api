@@ -17,6 +17,19 @@ var (
 	ErrInsertUser         = errors.New("erro ao inserir usuário")
 )
 
+type UserLogin struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type UserRegister struct {
+	Email     string `json:"email" bson:"email"`
+	Password  string `json:"password" bson:"password"`
+	Name      string `json:"name" bson:"name"`
+	Birthdate string `json:"birthdate" bson:"birthdate"`
+	Gender    string `json:"gender" bson:"gender"`
+}
+
 type UserRepository struct {
 	client *mongo.Client
 }
@@ -25,7 +38,7 @@ func NewUserRepository(client *mongo.Client) UserRepository {
 	return UserRepository{client}
 }
 
-func (r *UserRepository) CreateUser(user model.UserRegister) error {
+func (r *UserRepository) CreateUser(user UserRegister) error {
 	var err error
 	collection := r.client.Database("testdb").Collection("users")
 	//
