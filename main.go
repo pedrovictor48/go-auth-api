@@ -3,6 +3,8 @@ package main
 import (
 	"auth_api/controller"
 	"auth_api/db"
+	"auth_api/repository"
+	"auth_api/usecase"
 	"fmt"
 	"log"
 	"net/http"
@@ -11,7 +13,9 @@ import (
 func main() {
 	var err error
 	client := db.ConnectDB()
-	userController := controller.NewUserController(client)
+	userRepository := repository.NewUserRepository(client)
+	userUsecase := usecase.NewUserUsecase(userRepository)
+	userController := controller.NewUserController(userUsecase)
 
 	http.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
 		if http.MethodPost == r.Method {

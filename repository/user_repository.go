@@ -13,6 +13,8 @@ import (
 var (
 	ErrEmailAlreadyExists = errors.New("email já cadastrado")
 	ErrUserNotFound       = errors.New("usuário não encontrado")
+	ErrEncriptPassword    = errors.New("erro ao encriptar senha")
+	ErrInsertUser         = errors.New("erro ao inserir usuário")
 )
 
 type UserRepository struct {
@@ -35,12 +37,16 @@ func (r *UserRepository) CreateUser(user model.UserRegister) error {
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return err
+		return ErrEncriptPassword
 	}
 
 	user.Password = string(hash)
 	_, err = collection.InsertOne(context.TODO(), user)
-	return err
+	if err != nil {
+		return ErrInsertUser
+	}
+
+	return nil
 }
 
 func (r *UserRepository) GetUserByEmail(email string) (model.User, error) {

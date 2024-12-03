@@ -3,62 +3,36 @@ package controller
 import (
 	"auth_api/model"
 	"auth_api/repository"
+	"auth_api/usecase"
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"os"
-
-	"github.com/dgrijalva/jwt-go"
-	"go.mongodb.org/mongo-driver/mongo"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type UserController struct {
-	client *mongo.Client
+	usecase usecase.UserUsecase
 }
 
-func NewUserController(client *mongo.Client) UserController {
-	return UserController{client}
-}
-
-type UserLogin struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+func NewUserController(usecase usecase.UserUsecase) UserController {
+	return UserController{usecase}
 }
 
 func (c *UserController) Login(w http.ResponseWriter, r *http.Request) {
-	secret := os.Getenv("JWT_SECRET")
-
-	var user UserLogin
+	var user model.UserLogin
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&user)
 	if err != nil {
 		http.Error(w, "Erro ao ler JSON", http.StatusBadRequest)
 		return
 	}
-	userRepository := repository.NewUserRepository(c.client)
-	existingUser, err := userRepository.GetUserByEmail(user.Email)
+
+	tokenString, err := c.usecase.LoginUser(user)
 	if err == repository.ErrUserNotFound {
 		http.Error(w, "Usuário não encontrado", http.StatusNotFound)
 		return
-	}
-	if err != nil {
-		http.Error(w, "Erro ao buscar usuário", http.StatusInternalServerError)
+	} else if err == usecase.ErrEncriptPassword {
+		http.Error(w, "Senha inválida", http.StatusUnauthorized)
 		return
-	}
-
-	err = bcrypt.CompareHashAndPassword([]byte(existingUser.Password), []byte(user.Password))
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Senha incorreta, %v", err), http.StatusUnauthorized)
-		return
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"id": existingUser.ID,
-	})
-
-	tokenString, err := token.SignedString([]byte(secret))
-	if err != nil {
+	} else if err == usecase.ErrGenerateToken {
 		http.Error(w, "Erro ao gerar token", http.StatusInternalServerError)
 		return
 	}
@@ -75,14 +49,16 @@ func (c *UserController) Register(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Erro ao ler JSON", http.StatusBadRequest)
 		return
 	}
-	userRepository := repository.NewUserRepository(c.client)
-	err = userRepository.CreateUser(user)
+
+	err = c.usecase.RegisterUser(user)
 	if err == repository.ErrEmailAlreadyExists {
 		http.Error(w, "Email já cadastrado", http.StatusConflict)
 		return
-	}
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Erro ao criar usuário: %v", err), http.StatusInternalServerError)
+	} else if err == repository.ErrEncriptPassword {
+		http.Error(w, "Erro ao encriptar senha", http.StatusInternalServerError)
+		return
+	} else if err == repository.ErrInsertUser {
+		http.Error(w, "Erro ao inserir usuário", http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusCreated)

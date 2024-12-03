@@ -3,10 +3,16 @@ package usecase
 import (
 	"auth_api/model"
 	"auth_api/repository"
+	"errors"
 	"os"
 
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
+)
+
+var (
+	ErrEncriptPassword = errors.New("erro ao encriptar senha")
+	ErrGenerateToken   = errors.New("erro ao gerar token")
 )
 
 type UserUsecase struct {
@@ -29,7 +35,7 @@ func (u *UserUsecase) LoginUser(user model.UserLogin) (string, error) {
 
 	err = bcrypt.CompareHashAndPassword([]byte(existingUser.Password), []byte(user.Password))
 	if err != nil {
-		return "", nil
+		return "", ErrEncriptPassword
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
@@ -38,7 +44,7 @@ func (u *UserUsecase) LoginUser(user model.UserLogin) (string, error) {
 
 	tokenString, err := token.SignedString([]byte(secret))
 	if err != nil {
-		return "", err
+		return "", ErrGenerateToken
 	}
 	return tokenString, nil
 }
