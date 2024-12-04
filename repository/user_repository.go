@@ -41,7 +41,6 @@ func NewUserRepository(client *mongo.Client) UserRepository {
 func (r *UserRepository) CreateUser(user UserRegister) error {
 	var err error
 	collection := r.client.Database("testdb").Collection("users")
-	//
 	var existingUser model.User
 	err = collection.FindOne(context.TODO(), bson.M{"email": user.Email}).Decode(&existingUser)
 	if err == nil {

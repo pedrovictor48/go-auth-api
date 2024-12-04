@@ -17,6 +17,20 @@ func main() {
 	userUsecase := usecase.NewUserUsecase(userRepository)
 	userController := controller.NewUserController(userUsecase)
 
+	postRepository := repository.NewPostRepository(client)
+	postUsecase := usecase.NewPostUsecase(postRepository)
+	postController := controller.NewPostController(postUsecase)
+
+	http.HandleFunc("/post", func(w http.ResponseWriter, r *http.Request) {
+		if http.MethodPost == r.Method {
+			postController.CreatePost(w, r)
+		} else if http.MethodGet == r.Method {
+			postController.GetPostsById(w, r)
+		} else {
+			http.Error(w, "Método não permitido", http.StatusMethodNotAllowed)
+		}
+	})
+
 	http.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
 		if http.MethodPost == r.Method {
 			userController.Login(w, r)
