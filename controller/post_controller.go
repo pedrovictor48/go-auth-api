@@ -45,7 +45,6 @@ func (p *PostController) CreatePost(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Token não encontrado", http.StatusUnauthorized)
 		return
 	}
-	fmt.Println(tokenString)
 
 	secretKey := []byte(os.Getenv("JWT_SECRET"))
 
